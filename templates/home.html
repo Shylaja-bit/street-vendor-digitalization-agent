@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Home — Street Vendor Digitalization Agent{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center min-vh-75">
+      <div class="col-lg-7">
+        <span class="badge badge-ibm mb-3">Powered by IBM Granite AI</span>
+        <h1 class="hero-title">Digitalize Your Street Business</h1>
+        <p class="hero-subtitle">
+          AI-powered tools for street vendors &amp; micro-entrepreneurs —
+          get a digital profile, UPI payments, Google listings, government loans,
+          and grow your business for free.
+        </p>
+        <div class="d-flex flex-wrap gap-3 mt-4">
+          <a href="{{ url_for('chatbot') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-chat-dots me-2"></i>Talk to AI Assistant
+          </a>
+          <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg">
+            <i class="bi bi-person-plus me-2"></i>Register Your Business
+          </a>
+        </div>
+        <div class="hero-stats mt-5">
+          <div class="stat-item"><span class="stat-number">11</span><span class="stat-label">AI Features</span></div>
+          <div class="stat-item"><span class="stat-number">3</span><span class="stat-label">Languages</span></div>
+          <div class="stat-item"><span class="stat-number">5+</span><span class="stat-label">Govt Schemes</span></div>
+          <div class="stat-item"><span class="stat-number">Free</span><span class="stat-label">Always</span></div>
+        </div>
+      </div>
+      <div class="col-lg-5 d-none d-lg-block text-center">
+        <div class="hero-illustration">
+          <i class="bi bi-shop-window" style="font-size:9rem;color:var(--ibm-blue);opacity:.15;"></i>
+          <div class="floating-cards">
+            <div class="float-card card-1"><i class="bi bi-qr-code me-1"></i>UPI Ready</div>
+            <div class="float-card card-2"><i class="bi bi-google me-1"></i>Google Listed</div>
+            <div class="float-card card-3"><i class="bi bi-currency-rupee me-1"></i>₹10K Loan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Grid -->
+<section class="py-5 bg-light-custom">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Everything a Vendor Needs</h2>
+      <p class="text-muted">One AI assistant — all your business needs covered</p>
+    </div>
+    <div class="row g-4">
+      {% set features = [
+        ("bi-person-badge","Business Profile","Generate a professional digital profile for your stall instantly.","primary"),
+        ("bi-qr-code-scan","UPI QR Setup","Step-by-step guide to accept digital payments with any UPI app.","success"),
+        ("bi-geo-alt","Google Business","Get listed on Google Maps and appear in local search results.","info"),
+        ("bi-search","Local SEO Tips","Free strategies to make your business discoverable online.","warning"),
+        ("bi-whatsapp","WhatsApp Marketing","Ready-to-send promotional messages for your customers.","success"),
+        ("bi-balloon-heart","Festival Promos","Creative offers and campaigns for Diwali, Eid, Holi and more.","danger"),
+        ("bi-graph-up","Pricing Advice","AI-powered competitive pricing recommendations.","primary"),
+        ("bi-bank","Govt Schemes","PM SVANidhi, MUDRA, PMEGP loan eligibility and application steps.","warning"),
+        ("bi-translate","Multilingual","Responses in English and Hindi (हिंदी).","info"),
+        ("bi-file-earmark-pdf","RAG Documents","Upload PDFs and let AI answer questions from your documents.","secondary"),
+        ("bi-people","Customer Tips","Practical tips to build loyal repeat customers.","success"),
+        ("bi-chat-dots","AI Chatbot","24/7 AI assistant for all your business questions.","primary"),
+      ] %}
+      {% for icon, title, desc, color in features %}
+      <div class="col-sm-6 col-lg-4">
+        <div class="feature-card h-100">
+          <div class="feature-icon text-{{ color }}">
+            <i class="bi {{ icon }}"></i>
+          </div>
+          <h5 class="feature-title">{{ title }}</h5>
+          <p class="feature-desc text-muted mb-0">{{ desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">How It Works</h2>
+      <p class="text-muted">Get digitalized in 3 simple steps</p>
+    </div>
+    <div class="row g-4 text-center">
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <i class="bi bi-person-plus step-icon text-primary"></i>
+          <h5 class="mt-3">Register Your Business</h5>
+          <p class="text-muted">Fill in your vendor details — name, location, products, and language preference.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <i class="bi bi-stars step-icon text-warning"></i>
+          <h5 class="mt-3">AI Generates Your Profile</h5>
+          <p class="text-muted">IBM Granite AI creates your digital business profile, QR code, and marketing materials.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <i class="bi bi-graph-up-arrow step-icon text-success"></i>
+          <h5 class="mt-3">Grow Your Business</h5>
+          <p class="text-muted">Use AI-generated content, apply for loans, and engage customers 24/7.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Banner -->
+<section class="cta-section py-5">
+  <div class="container text-center">
+    <h2 class="text-white mb-3">Ready to Take Your Business Online?</h2>
+    <p class="text-white-50 mb-4">Join thousands of vendors who are already growing with AI.</p>
+    <a href="{{ url_for('chatbot') }}" class="btn btn-light btn-lg me-3">
+      <i class="bi bi-chat-dots me-2"></i>Start Chatting
+    </a>
+    <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-lg">
+      <i class="bi bi-person-plus me-2"></i>Register Free
+    </a>
+  </div>
+</section>
+{% endblock %}

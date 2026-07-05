@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Contact — Street Vendor Agent{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <div class="text-center mb-5">
+        <h2 class="section-title"><i class="bi bi-envelope me-2 text-primary"></i>Get in Touch</h2>
+        <p class="text-muted">Have questions or feedback? We'd love to hear from you.</p>
+      </div>
+
+      <div class="row g-4 mb-5">
+        <div class="col-md-4 text-center">
+          <div class="contact-icon-card">
+            <i class="bi bi-whatsapp fs-2 text-success mb-2 d-block"></i>
+            <h6 class="fw-semibold">WhatsApp</h6>
+            <p class="text-muted small mb-0">Chat with us on WhatsApp for quick support.</p>
+          </div>
+        </div>
+        <div class="col-md-4 text-center">
+          <div class="contact-icon-card">
+            <i class="bi bi-envelope-fill fs-2 text-primary mb-2 d-block"></i>
+            <h6 class="fw-semibold">Email</h6>
+            <p class="text-muted small mb-0">support@vendorai.in</p>
+          </div>
+        </div>
+        <div class="col-md-4 text-center">
+          <div class="contact-icon-card">
+            <i class="bi bi-geo-alt-fill fs-2 text-danger mb-2 d-block"></i>
+            <h6 class="fw-semibold">Location</h6>
+            <p class="text-muted small mb-0">Hyderabad, Telangana, India</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body p-4 p-md-5">
+          <h5 class="fw-bold mb-4">Send a Message</h5>
+          <form id="contactForm">
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Your Name</label>
+                <input type="text" class="form-control" placeholder="Ramesh Kumar" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email or Mobile</label>
+                <input type="text" class="form-control" placeholder="email@example.com or 9876543210" required/>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Subject</label>
+              <select class="form-select">
+                <option>General Inquiry</option>
+                <option>Technical Support</option>
+                <option>Feature Request</option>
+                <option>Government Scheme Help</option>
+                <option>Partnership / Collaboration</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Message</label>
+              <textarea class="form-control" rows="5" placeholder="Describe your question or feedback..." required></textarea>
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary" id="contactSubmitBtn">
+                <i class="bi bi-send me-2"></i>Send Message
+              </button>
+            </div>
+          </form>
+          <div id="contactSuccess" class="alert alert-success mt-3 d-none">
+            <i class="bi bi-check-circle me-2"></i>Thank you! We'll get back to you within 24 hours.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  document.getElementById('contactSubmitBtn').disabled = true;
+  document.getElementById('contactSubmitBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+  setTimeout(() => {
+    document.getElementById('contactForm').classList.add('d-none');
+    document.getElementById('contactSuccess').classList.remove('d-none');
+  }, 1500);
+});
+</script>
+{% endblock %}

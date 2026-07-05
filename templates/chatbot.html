@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+{% block title %}AI Chatbot — Street Vendor Agent{% endblock %}
+
+{% block content %}
+<div class="container-fluid chatbot-page py-4">
+  <div class="row g-4">
+
+    <!-- ── Sidebar ── -->
+    <div class="col-lg-3">
+      <div class="sidebar-card">
+        <h6 class="sidebar-heading"><i class="bi bi-sliders me-2"></i>Settings</h6>
+
+        <label class="form-label fw-semibold small">Response Language</label>
+        <select id="langSelect" class="form-select form-select-sm mb-3">
+          <option value="en">🇬🇧 English</option>
+          <option value="hi">🇮🇳 Hindi (हिंदी)</option>
+        </select>
+
+        <hr/>
+        <h6 class="sidebar-heading"><i class="bi bi-lightning me-2"></i>Quick Actions</h6>
+        <div class="d-grid gap-2">
+          <button class="btn btn-outline-primary btn-sm quick-btn" data-msg="How do I set up UPI payment for my stall?">
+            <i class="bi bi-qr-code me-1"></i>UPI Setup Help
+          </button>
+          <button class="btn btn-outline-success btn-sm quick-btn" data-msg="What government schemes are available for street vendors?">
+            <i class="bi bi-bank me-1"></i>Govt Schemes
+          </button>
+          <button class="btn btn-outline-info btn-sm quick-btn" data-msg="How do I create a Google Business Profile for my stall?">
+            <i class="bi bi-geo-alt me-1"></i>Google Listing
+          </button>
+          <button class="btn btn-outline-warning btn-sm quick-btn" data-msg="Give me WhatsApp marketing messages for my food stall.">
+            <i class="bi bi-whatsapp me-1"></i>WhatsApp Messages
+          </button>
+          <button class="btn btn-outline-danger btn-sm quick-btn" data-msg="Give me Diwali promotion ideas for my business.">
+            <i class="bi bi-balloon-heart me-1"></i>Festival Promos
+          </button>
+          <button class="btn btn-outline-secondary btn-sm quick-btn" data-msg="PM SVANidhi loan के बारे में Hindi में बताइए।">
+            <i class="bi bi-translate me-1"></i>Hindi मदद
+          </button>
+        </div>
+
+        <hr/>
+        <h6 class="sidebar-heading"><i class="bi bi-file-earmark-pdf me-2"></i>Upload PDF</h6>
+        <div id="uploadArea" class="upload-area text-center p-3">
+          <i class="bi bi-cloud-upload fs-3 text-muted"></i>
+          <p class="small text-muted mb-2">Drop PDF here or click</p>
+          <input type="file" id="pdfInput" accept=".pdf" class="d-none"/>
+          <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('pdfInput').click()">
+            Choose PDF
+          </button>
+        </div>
+        <div id="uploadStatus" class="mt-2 small"></div>
+
+        <!-- PDF Only Mode Toggle -->
+        <div id="pdfModeWrapper" class="d-none mt-2">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="pdfOnlyToggle" checked/>
+            <label class="form-check-label small fw-semibold" for="pdfOnlyToggle">
+              <i class="bi bi-file-lock me-1 text-warning"></i>Answer from PDF only
+            </label>
+          </div>
+          <small class="text-muted">Turn off to allow general AI answers too</small>
+        </div>
+
+        <hr/>
+        <button id="clearChatBtn" class="btn btn-sm btn-outline-danger w-100 mb-2">
+          <i class="bi bi-trash me-1"></i>Clear Chat
+        </button>
+        <button id="clearIndexBtn" class="btn btn-sm btn-outline-warning w-100" title="Remove all uploaded PDFs from AI memory">
+          <i class="bi bi-database-x me-1"></i>Clear PDF Index
+        </button>
+        <div id="clearIndexStatus" class="mt-1 small"></div>
+      </div>
+    </div>
+
+    <!-- ── Chat Area ── -->
+    <div class="col-lg-9">
+      <div class="chat-container d-flex flex-column">
+
+        <!-- Header -->
+        <div class="chat-header d-flex align-items-center gap-3 p-3">
+          <div class="ai-avatar"><i class="bi bi-robot"></i></div>
+          <div>
+            <h6 class="mb-0 fw-bold">VendorAI Assistant</h6>
+            <small class="text-muted">Powered by IBM Granite · RAG Enabled</small>
+          </div>
+          <div class="ms-auto d-flex align-items-center gap-2">
+            <button id="voiceToggleBtn" class="btn btn-sm btn-success" title="Click to turn voice OFF">
+              <i class="bi bi-volume-up-fill"></i> 🔊 Voice ON
+            </button>
+            <span class="badge bg-success-subtle text-success border border-success-subtle">
+              <i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Online
+            </span>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages flex-grow-1 p-3" id="chatMessages">
+          <!-- Welcome message -->
+          <div class="message assistant-message">
+            <div class="message-bubble">
+              <p class="mb-1">👋 <strong>Namaste! I'm VendorAI</strong>, your digital business assistant.</p>
+              <p class="mb-1">I can help you with:</p>
+              <ul class="mb-1 ps-3 small">
+                <li>Setting up UPI / QR code payments</li>
+                <li>Creating your Google Business Profile</li>
+                <li>Government loan schemes (PM SVANidhi, MUDRA)</li>
+                <li>WhatsApp &amp; social media marketing</li>
+                <li>Local SEO and customer engagement</li>
+              </ul>
+              <p class="mb-0 small text-muted">Type your question or use the Quick Actions →</p>
+            </div>
+            <span class="msg-time">Now</span>
+          </div>
+
+          <!-- Server-side history -->
+          {% for msg in chat_history %}
+          <div class="message {{ 'user-message' if msg.role == 'user' else 'assistant-message' }}">
+            <div class="message-bubble">{{ msg.content }}</div>
+            <span class="msg-time">{{ msg.timestamp }}</span>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Typing indicator -->
+        <div class="typing-indicator d-none px-3 pb-1" id="typingIndicator">
+          <div class="message assistant-message mb-0">
+            <div class="message-bubble">
+              <span class="typing-dots"><span></span><span></span><span></span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="chat-input-bar p-3">
+          <div class="input-group">
+            <button id="micBtn" class="btn btn-outline-danger px-3" title="Hold to speak">
+              <i class="bi bi-mic-fill"></i>
+            </button>
+            <input type="text" id="chatInput" class="form-control"
+                   placeholder="🎤 Click mic to speak, or type your question..."
+                   autocomplete="off"/>
+            <button id="sendBtn" class="btn btn-primary px-4">
+              <i class="bi bi-send-fill"></i>
+            </button>
+          </div>
+          <div class="mt-1 d-flex justify-content-between">
+            <small class="text-muted" id="voiceStatus">🎤 Click the mic and speak your question</small>
+            <small class="text-muted" id="ragStatus"></small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const chatMessages   = document.getElementById('chatMessages');
+const chatInput      = document.getElementById('chatInput');
+const sendBtn        = document.getElementById('sendBtn');
+const typingInd      = document.getElementById('typingIndicator');
+const langSelect     = document.getElementById('langSelect');
+const ragStatus      = document.getElementById('ragStatus');
+const micBtn         = document.getElementById('micBtn');
+const voiceStatus    = document.getElementById('voiceStatus');
+const voiceToggleBtn = document.getElementById('voiceToggleBtn');
+
+// ════════════════════════════════════════════════════════
+//  VOICE ENGINE  — pause / resume / Hindi / Telugu fix
+// ════════════════════════════════════════════════════════
+
+let voiceEnabled  = true;   // global on/off
+let sentences     = [];     // full response split into sentences
+let sentIdx       = 0;      // which sentence to speak next
+let isSpeaking    = false;
+let isPaused      = false;
+
+// Button states
+function setVoiceBtn(state) {
+  const B = voiceToggleBtn;
+  if (state === 'on')       { B.className='btn btn-sm btn-success';   B.title='Click to turn Voice OFF'; B.innerHTML='<i class="bi bi-volume-up-fill"></i> 🔊 Voice ON'; }
+  else if (state === 'off') { B.className='btn btn-sm btn-secondary'; B.title='Click to turn Voice ON';  B.innerHTML='<i class="bi bi-volume-mute-fill"></i> 🔇 Voice OFF'; }
+  else if (state === 'speaking') { B.className='btn btn-sm btn-danger';  B.title='Click to Pause';        B.innerHTML='<i class="bi bi-pause-fill"></i> ⏸ Pause'; }
+  else if (state === 'paused')   { B.className='btn btn-sm btn-warning'; B.title='Click to Resume';       B.innerHTML='<i class="bi bi-play-fill"></i> ▶ Resume'; }
+}
+
+// Pick the best available voice — fallback chain for Hindi / English
+function getBestVoice(langCode) {
+  const all = window.speechSynthesis.getVoices();
+  if (!all.length) return null;
+  const chains = {
+    'hi-IN': ['hi-IN','hi','en-IN','en-GB','en-US'],
+    'en-IN': ['en-IN','en-GB','en-US','en'],
+  };
+  for (const code of (chains[langCode] || ['en-IN','en-GB','en-US'])) {
+    const v = all.find(v => v.lang === code) || all.find(v => v.lang.startsWith(code.slice(0,2)));
+    if (v) return v;
+  }
+  return all[0];
+}
+
+function getLangCode() {
+  return { en:'en-IN', hi:'hi-IN' }[langSelect.value] || 'en-IN';
+}
+
+// Speak one sentence; on finish automatically continue to the next
+function _speakSentence(idx) {
+  if (idx >= sentences.length || isPaused) {
+    isSpeaking = false;
+    if (!isPaused) setVoiceBtn(voiceEnabled ? 'on' : 'off');
+    return;
+  }
+  const langCode = getLangCode();
+  const utt = new SpeechSynthesisUtterance(sentences[idx]);
+  utt.lang  = langCode;
+  utt.rate  = 0.9;
+  utt.pitch = 1.0;
+
+  // For Hindi/Telugu use English voice as fallback if native not available
+  const voice = getBestVoice(langCode);
+  if (voice) utt.voice = voice;
+
+  utt.onstart = () => { sentIdx = idx; isSpeaking = true; setVoiceBtn('speaking'); };
+  utt.onend   = () => { if (!isPaused) _speakSentence(idx + 1); };
+  utt.onerror = (e) => { if (e.error !== 'interrupted') _speakSentence(idx + 1); };
+  window.speechSynthesis.speak(utt);
+}
+
+// Main speak — splits text into sentences, starts from sentence 0
+function speakText(text) {
+  if (!voiceEnabled || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  isPaused = false;
+
+  // Clean markdown, split on sentence endings (works for Hindi । too)
+  const clean = text.replace(/[*_#`>]/g, '').replace(/\s+/g, ' ').trim();
+  sentences = clean.match(/[^.!?।\n]+[.!?।\n]*/g)
+                ?.map(s => s.trim()).filter(s => s.length > 2) || [clean];
+  sentIdx = 0;
+
+  // Voices may not be ready yet on first page load — wait for them
+  function start() { _speakSentence(0); }
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      start();
+    };
+  } else {
+    start();
+  }
+}
+
+// Button click: Pause → Resume → Stop → ON / OFF
+voiceToggleBtn.addEventListener('click', () => {
+  if (isSpeaking && !isPaused) {
+    // Currently speaking → PAUSE (remember sentence position)
+    isPaused = true;
+    window.speechSynthesis.cancel();
+    setVoiceBtn('paused');
+  } else if (isPaused) {
+    // Paused → RESUME from exact sentence where we stopped
+    isPaused   = false;
+    isSpeaking = true;
+    _speakSentence(sentIdx);   // ← continues from where it paused
+  } else if (voiceEnabled) {
+    // Idle & voice is ON → turn OFF
+    voiceEnabled = false;
+    window.speechSynthesis.cancel();
+    sentences = []; sentIdx = 0; isSpeaking = false; isPaused = false;
+    setVoiceBtn('off');
+  } else {
+    // Voice is OFF → turn ON
+    voiceEnabled = true;
+    setVoiceBtn('on');
+  }
+});
+
+// ════════════════════════════════════════════════════════
+//  SPEECH-TO-TEXT  (mic button)
+// ════════════════════════════════════════════════════════
+let recognition = null;
+let isListening = false;
+
+// ── Step 1: ask for mic permission immediately via getUserMedia so Chrome
+//            registers the grant for this origin (both localhost & 127.0.0.1)
+function requestMicPermission() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    voiceStatus.innerHTML = '<span class="text-danger">❌ Your browser does not support microphone access. Use Chrome.</span>';
+    micBtn.disabled = true;
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      // Permission granted — stop the stream immediately, we only needed the grant
+      stream.getTracks().forEach(t => t.stop());
+      voiceStatus.innerHTML = '🎤 Mic ready! Click to speak your question.';
+      micBtn.disabled = false;
+      setupRecognition();
+    })
+    .catch(err => {
+      micBtn.disabled = true;
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        voiceStatus.innerHTML = '<span class="text-danger fw-semibold">❌ Mic permission DENIED. Click the 🔒 lock icon in the Chrome address bar → Microphone → Allow → then refresh this page.</span>';
+      } else if (err.name === 'NotFoundError') {
+        voiceStatus.innerHTML = '<span class="text-danger">❌ No microphone found. Plug in a mic and refresh.</span>';
+      } else {
+        voiceStatus.innerHTML = `<span class="text-danger">❌ Mic error: ${err.name} — ${err.message}</span>`;
+      }
+    });
+}
+
+function setupRecognition() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    micBtn.disabled = true;
+    voiceStatus.innerHTML = '⚠️ Voice input needs Chrome or Edge browser';
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.continuous     = false;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    isListening = true;
+    micBtn.className = 'btn btn-danger px-3 pulse-mic';
+    voiceStatus.innerHTML = '<span class="text-danger">🔴 Listening... speak now</span>';
+    chatInput.placeholder  = 'Listening...';
+  };
+  recognition.onresult = (e) => {
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final  += e.results[i][0].transcript;
+      else                       interim += e.results[i][0].transcript;
+    }
+    chatInput.value = final || interim;
+  };
+  recognition.onend = () => {
+    isListening = false;
+    micBtn.className = 'btn btn-outline-danger px-3';
+    voiceStatus.innerHTML = '🎤 Click the mic and speak your question';
+    chatInput.placeholder  = '🎤 Click mic to speak, or type your question...';
+    if (chatInput.value.trim()) sendMessage();
+  };
+  recognition.onerror = (e) => {
+    isListening = false;
+    micBtn.className = 'btn btn-outline-danger px-3';
+    const msgs = {
+      'not-allowed':         '❌ Mic permission denied. Click 🔒 in the address bar → Microphone → Allow → refresh.',
+      'no-speech':           '🔇 No speech detected. Try again.',
+      'network':             '⚠️ Network error — mic needs localhost or HTTPS.',
+      'service-not-allowed': '❌ Mic blocked by browser policy.',
+      'audio-capture':       '❌ No microphone found. Check your mic is plugged in.',
+    };
+    const msg = msgs[e.error] || '⚠️ Mic error: ' + e.error;
+    voiceStatus.innerHTML = `<span class="text-danger fw-semibold">${msg}</span>`;
+  };
+
+  micBtn.addEventListener('click', () => {
+    if (isListening) {
+      recognition.stop();
+    } else {
+      recognition.lang = getLangCode();
+      chatInput.value  = '';
+      window.speechSynthesis.cancel();
+      try {
+        recognition.start();
+      } catch(err) {
+        voiceStatus.innerHTML = '<span class="text-danger">⚠️ Could not start mic: ' + err.message + '. Refresh the page.</span>';
+      }
+    }
+  });
+
+  langSelect.addEventListener('change', () => { if (isListening) recognition.stop(); });
+}
+
+// Kick off permission request on page load
+requestMicPermission();
+
+// ════════════════════════════════════════════════════════
+//  CHAT HELPERS
+// ════════════════════════════════════════════════════════
+function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
+scrollToBottom();
+
+function formatText(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br/>');
+}
+
+function appendMessage(role, content, time) {
+  const div = document.createElement('div');
+  div.className = `message ${role === 'user' ? 'user-message' : 'assistant-message'}`;
+  div.innerHTML = `
+    <div class="message-bubble">${formatText(content)}</div>
+    <span class="msg-time">${time || new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+  `;
+  chatMessages.appendChild(div);
+  scrollToBottom();
+}
+
+// ════════════════════════════════════════════════════════
+//  SEND MESSAGE
+// ════════════════════════════════════════════════════════
+async function sendMessage(text) {
+  const message = (text || chatInput.value).trim();
+  if (!message) return;
+  chatInput.value  = '';
+  sendBtn.disabled = true;
+  appendMessage('user', message);
+  typingInd.classList.remove('d-none');
+  scrollToBottom();
+
+  const pdfOnlyToggle = document.getElementById('pdfOnlyToggle');
+  const pdfOnly = pdfOnlyToggle &&
+    !pdfOnlyToggle.closest('#pdfModeWrapper').classList.contains('d-none')
+    ? pdfOnlyToggle.checked : false;
+
+  try {
+    const res  = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({message, language: langSelect.value, pdf_only: pdfOnly})
+    });
+    const data = await res.json();
+    typingInd.classList.add('d-none');
+    if (data.response) {
+      appendMessage('assistant', data.response, data.timestamp);
+      ragStatus.textContent = data.sources_used
+        ? (pdfOnly ? '📄 Answered from your PDF' : '📄 RAG sources used') : '';
+      speakText(data.response);
+    } else {
+      appendMessage('assistant', data.error || 'Something went wrong.');
+    }
+  } catch {
+    typingInd.classList.add('d-none');
+    appendMessage('assistant', '⚠️ Connection error.');
+  }
+  sendBtn.disabled = false;
+  chatInput.focus();
+}
+
+sendBtn.addEventListener('click', () => sendMessage());
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+document.querySelectorAll('.quick-btn').forEach(btn => {
+  btn.addEventListener('click', () => sendMessage(btn.dataset.msg));
+});
+
+// ════════════════════════════════════════════════════════
+//  CLEAR CHAT / CLEAR INDEX
+// ════════════════════════════════════════════════════════
+document.getElementById('clearChatBtn').addEventListener('click', async () => {
+  if (!confirm('Clear all chat history?')) return;
+  window.speechSynthesis.cancel();
+  sentences = []; sentIdx = 0; isSpeaking = false; isPaused = false;
+  await fetch('/api/clear-chat', {method:'POST'});
+  document.querySelectorAll('.message:not(:first-child)').forEach(m => m.remove());
+  ragStatus.textContent = '';
+});
+
+document.getElementById('clearIndexBtn').addEventListener('click', async () => {
+  if (!confirm('Remove ALL uploaded PDFs from AI memory?')) return;
+  const statusEl = document.getElementById('clearIndexStatus');
+  statusEl.innerHTML = '<span class="text-warning">Clearing...</span>';
+  try {
+    const res  = await fetch('/api/clear-index', {method:'POST'});
+    const data = await res.json();
+    if (data.status === 'success') {
+      statusEl.innerHTML = '<span class="text-success">✅ Index cleared! Upload a new PDF.</span>';
+      uploadStatus.innerHTML = '';
+      document.getElementById('pdfModeWrapper').classList.add('d-none');
+    } else {
+      statusEl.innerHTML = `<span class="text-danger">${data.error}</span>`;
+    }
+  } catch {
+    statusEl.innerHTML = '<span class="text-danger">Failed to clear index.</span>';
+  }
+});
+
+// ════════════════════════════════════════════════════════
+//  PDF UPLOAD
+// ════════════════════════════════════════════════════════
+const pdfInput     = document.getElementById('pdfInput');
+const uploadStatus = document.getElementById('uploadStatus');
+
+pdfInput.addEventListener('change', async () => {
+  const file = pdfInput.files[0];
+  if (!file) return;
+  uploadStatus.innerHTML = '<span class="text-info">Uploading & indexing...</span>';
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const res  = await fetch('/api/upload-pdf', {method:'POST', body: formData});
+    const data = await res.json();
+    if (data.status === 'success') {
+      uploadStatus.innerHTML = `<span class="text-success">✅ ${data.message}</span>`;
+      document.getElementById('pdfModeWrapper').classList.remove('d-none');
+      document.getElementById('pdfOnlyToggle').checked = true;
+      appendMessage('assistant',
+        `✅ PDF "${data.filename}" uploaded!\nI will now answer questions **only from this PDF**.\nTurn off "Answer from PDF only" in the sidebar to use general AI knowledge too.`
+      );
+    } else {
+      uploadStatus.innerHTML = `<span class="text-danger">❌ ${data.error}</span>`;
+    }
+  } catch {
+    uploadStatus.innerHTML = '<span class="text-danger">Upload failed.</span>';
+  }
+  pdfInput.value = '';
+});
+</script>
+{% endblock %}

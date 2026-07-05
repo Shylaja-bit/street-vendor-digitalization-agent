@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}About — Street Vendor Digitalization Agent{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="text-center mb-5">
+    <h2 class="section-title">About VendorAI</h2>
+    <p class="text-muted lead">Street Vendor Digitalization Agent powered by IBM watsonx.ai</p>
+  </div>
+
+  <!-- Mission -->
+  <div class="row align-items-center g-5 mb-5">
+    <div class="col-lg-6">
+      <h3 class="fw-bold mb-3">Our Mission</h3>
+      <p>India has over <strong>10 million street vendors</strong> and micro-entrepreneurs who lack access to digital tools, formal credit, and online visibility. VendorAI bridges this gap by providing an AI-powered platform that:</p>
+      <ul class="about-list">
+        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Creates professional digital business profiles instantly</li>
+        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Guides vendors through UPI payment setup in minutes</li>
+        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Helps vendors get listed on Google Maps for free</li>
+        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Connects vendors with government loan schemes</li>
+        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Provides marketing content in local languages</li>
+      </ul>
+    </div>
+    <div class="col-lg-6">
+      <div class="about-tech-card">
+        <h5 class="fw-bold mb-3"><i class="bi bi-cpu me-2 text-primary"></i>Technology Stack</h5>
+        <div class="tech-badge-grid">
+          <span class="tech-badge ibm">IBM watsonx.ai Studio</span>
+          <span class="tech-badge ibm">IBM Granite LLM</span>
+          <span class="tech-badge python">Python 3.11+</span>
+          <span class="tech-badge python">Flask</span>
+          <span class="tech-badge ai">LangChain</span>
+          <span class="tech-badge ai">FAISS Vector DB</span>
+          <span class="tech-badge ai">HuggingFace Embeddings</span>
+          <span class="tech-badge ui">Bootstrap 5</span>
+          <span class="tech-badge ui">HTML / CSS / JS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RAG Section -->
+  <div class="row g-4 mb-5">
+    <div class="col-12">
+      <div class="rag-explainer">
+        <h4 class="fw-bold mb-3"><i class="bi bi-diagram-3 me-2 text-info"></i>How RAG Works in VendorAI</h4>
+        <div class="row g-3">
+          <div class="col-md-3 text-center">
+            <div class="rag-step"><span class="rag-num">1</span></div>
+            <h6 class="mt-2">Upload Documents</h6>
+            <p class="small text-muted">Upload PDFs like PM SVANidhi guidelines, MSME schemes, UPI manuals.</p>
+          </div>
+          <div class="col-md-3 text-center">
+            <div class="rag-step"><span class="rag-num">2</span></div>
+            <h6 class="mt-2">Vectorize &amp; Index</h6>
+            <p class="small text-muted">LangChain splits text, HuggingFace embeds it, FAISS stores vectors.</p>
+          </div>
+          <div class="col-md-3 text-center">
+            <div class="rag-step"><span class="rag-num">3</span></div>
+            <h6 class="mt-2">Semantic Search</h6>
+            <p class="small text-muted">User questions are matched against document vectors for relevant context.</p>
+          </div>
+          <div class="col-md-3 text-center">
+            <div class="rag-step"><span class="rag-num">4</span></div>
+            <h6 class="mt-2">Granite Generates</h6>
+            <p class="small text-muted">IBM Granite LLM combines context + query to generate accurate answers.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Government Schemes Covered -->
+  <div class="mb-5">
+    <h4 class="fw-bold mb-3"><i class="bi bi-bank me-2 text-warning"></i>Government Schemes Covered</h4>
+    <div class="row g-3">
+      {% set schemes = [
+        ("PM SVANidhi", "₹10K–₹50K working capital loans for street vendors", "success"),
+        ("PMEGP", "Prime Minister's Employment Generation Programme — subsidy up to 35%", "primary"),
+        ("MUDRA Yojana", "Shishu / Kishore / Tarun loans up to ₹10 lakh, no collateral", "info"),
+        ("MSME Udyam", "Free registration for priority lending &amp; government tender preferences", "warning"),
+        ("Digital India", "Grants and training for digital adoption in micro businesses", "secondary"),
+        ("Jan Dhan Yojana", "Zero-balance account + RuPay card + ₹2 lakh accident insurance", "danger"),
+      ] %}
+      {% for name, desc, color in schemes %}
+      <div class="col-sm-6 col-lg-4">
+        <div class="scheme-card border-{{ color }}">
+          <span class="scheme-badge bg-{{ color }}-subtle text-{{ color }} border border-{{ color }}-subtle">{{ name }}</span>
+          <p class="small text-muted mb-0 mt-2">{{ desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Languages -->
+  <div class="text-center py-4 lang-section">
+    <h4 class="fw-bold mb-3"><i class="bi bi-translate me-2"></i>Multilingual Support</h4>
+    <div class="d-flex justify-content-center gap-4 flex-wrap">
+      <div class="lang-pill">🇬🇧 English</div>
+      <div class="lang-pill">🇮🇳 Hindi — हिंदी में सहायता</div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

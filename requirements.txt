@@ -1,0 +1,17 @@
+flask==3.0.3
+flask-session==0.8.0
+python-dotenv==1.0.1
+ibm-watsonx-ai==1.5.14
+langchain==0.2.16
+langchain-community==0.2.16
+langchain-huggingface==0.0.3
+faiss-cpu==1.8.0
+sentence-transformers==3.1.1
+pypdf==4.3.1
+pdfplumber==0.11.4
+werkzeug==3.0.4
+gunicorn==22.0.0
+requests==2.32.3
+numpy==1.26.4
+qrcode[pil]==7.4.2
+Pillow==10.4.0

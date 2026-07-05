@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Street Vendor Agent{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h3 class="fw-bold mb-0">
+        <i class="bi bi-speedometer2 me-2 text-primary"></i>
+        {{ vendor.business_name or 'Your Dashboard' }}
+      </h3>
+      <small class="text-muted">{{ vendor.category or '' }} · {{ vendor.city or '' }}</small>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      {% if all_profiles|length < max_profiles %}
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">
+          <i class="bi bi-person-plus me-1"></i>Add New Profile
+        </a>
+      {% else %}
+        <span class="badge bg-warning text-dark">Max {{ max_profiles }} profiles reached</span>
+      {% endif %}
+      <a href="{{ url_for('register') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-pencil me-1"></i>Update Current
+      </a>
+    </div>
+  </div>
+
+  <!-- Profile Switcher -->
+  {% if all_profiles|length > 0 %}
+  <div class="card shadow-sm mb-4 border-primary">
+    <div class="card-header bg-primary text-white fw-semibold py-2">
+      <i class="bi bi-people me-2"></i>Saved Profiles
+      <span class="badge bg-white text-primary ms-2">{{ all_profiles|length }} / {{ max_profiles }}</span>
+    </div>
+    <div class="card-body p-2">
+      <div class="d-flex flex-wrap gap-2">
+        {% for p in all_profiles %}
+        <div class="d-flex align-items-center gap-1 profile-chip {% if p.id == active_profile_id %}active-chip{% endif %}"
+             id="chip-{{ p.id }}">
+          <button class="btn btn-sm {% if p.id == active_profile_id %}btn-primary{% else %}btn-outline-primary{% endif %} profile-switch-btn"
+                  data-id="{{ p.id }}" data-name="{{ p.vendor.business_name }}">
+            <i class="bi bi-shop me-1"></i>{{ p.vendor.business_name }}
+            <small class="ms-1 opacity-75">{{ p.created_at }}</small>
+          </button>
+          <button class="btn btn-sm btn-outline-danger profile-delete-btn" data-id="{{ p.id }}"
+                  title="Delete this profile">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Stats Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card text-center">
+        <div class="stat-icon text-primary"><i class="bi bi-file-earmark-person"></i></div>
+        <div class="stat-val">{{ '✅' if profile else '❌' }}</div>
+        <div class="stat-lbl">Profile Generated</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card text-center">
+        <div class="stat-icon text-success"><i class="bi bi-database"></i></div>
+        <div class="stat-val" id="vecCount">{{ stats.total_vectors }}</div>
+        <div class="stat-lbl">RAG Vectors</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card text-center">
+        <div class="stat-icon text-info"><i class="bi bi-translate"></i></div>
+        <div class="stat-val">{{ vendor.language|upper if vendor.language else 'EN' }}</div>
+        <div class="stat-lbl">Language</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card text-center">
+        <div class="stat-icon text-warning"><i class="bi bi-clock-history"></i></div>
+        <div class="stat-val" id="activeTime">0m</div>
+        <div class="stat-lbl">Session Time</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Business Profile Card -->
+    <div class="col-lg-7">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-primary text-white fw-semibold">
+          <i class="bi bi-person-badge me-2"></i>AI-Generated Business Profile
+        </div>
+        <div class="card-body">
+          {% if profile %}
+            <div class="profile-output" id="profileText">{{ profile }}</div>
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+              <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('profileText')">
+                <i class="bi bi-clipboard me-1"></i>Copy
+              </button>
+              <button class="btn btn-sm btn-outline-success" onclick="downloadText('profileText','business_profile.txt')">
+                <i class="bi bi-download me-1"></i>Download
+              </button>
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-person-plus fs-1 text-muted"></i>
+              <p class="mt-2 text-muted">No profile yet. Register your business first.</p>
+              <a href="{{ url_for('register') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus me-1"></i>Register Now
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Tools Panel -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-qr-code me-2"></i>Generate UPI QR Code
+        </div>
+        <div class="card-body">
+          <div class="row g-2 mb-2">
+            <div class="col-8">
+              <input type="text" id="upiId" class="form-control form-control-sm" placeholder="your-upi-id@bank"/>
+            </div>
+            <div class="col-4">
+              <button class="btn btn-primary btn-sm w-100" onclick="generateQR()">Generate</button>
+            </div>
+          </div>
+          <input type="number" id="upiAmount" class="form-control form-control-sm mb-2" placeholder="Amount (optional)"/>
+          <div id="qrOutput" class="text-center"></div>
+        </div>
+      </div>
+
+      <!-- Quick Tools -->
+      <div class="card shadow-sm">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-lightning me-2"></i>Quick AI Tools
+        </div>
+        <div class="card-body p-2">
+          <div class="d-grid gap-2">
+            <button class="btn btn-outline-primary btn-sm text-start" onclick="openTool('upi')">
+              <i class="bi bi-qr-code-scan me-2"></i>UPI Setup Guide
+            </button>
+            <button class="btn btn-outline-success btn-sm text-start" onclick="openTool('govtSchemes')">
+              <i class="bi bi-bank me-2"></i>Government Schemes
+            </button>
+            <button class="btn btn-outline-info btn-sm text-start" onclick="openTool('seo')">
+              <i class="bi bi-search me-2"></i>Local SEO Tips
+            </button>
+            <button class="btn btn-outline-warning btn-sm text-start" onclick="openTool('festival')">
+              <i class="bi bi-balloon-heart me-2"></i>Festival Promotions
+            </button>
+            <button class="btn btn-outline-danger btn-sm text-start" onclick="openTool('whatsapp')">
+              <i class="bi bi-whatsapp me-2"></i>WhatsApp Messages
+            </button>
+            <button class="btn btn-outline-secondary btn-sm text-start" onclick="openTool('pricing')">
+              <i class="bi bi-currency-rupee me-2"></i>Pricing Advice
+            </button>
+            <button class="btn btn-outline-dark btn-sm text-start" onclick="openTool('customer')">
+              <i class="bi bi-people me-2"></i>Customer Tips
+            </button>
+            <button class="btn btn-outline-primary btn-sm text-start" onclick="openTool('googleBusiness')">
+              <i class="bi bi-geo-alt me-2"></i>Google Business Guide
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tool Output Modal -->
+  <div class="modal fade" id="toolModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="toolModalTitle">AI Result</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="toolModalBody" class="tool-output"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('toolModalBody')">
+            <i class="bi bi-clipboard me-1"></i>Copy
+          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const vendorData = {
+  name: "{{ vendor.vendor_name|default('Vendor', true) }}",
+  business: "{{ vendor.business_name|default('My Business', true) }}",
+  category: "{{ vendor.category|default('street vendor', true) }}",
+  location: "{{ vendor.location|default('', true) }}",
+  city: "{{ vendor.city|default('India', true) }}",
+  language: "{{ vendor.language|default('en', true) }}"
+};
+
+// Session timer
+let seconds = 0;
+setInterval(() => {
+  seconds++;
+  document.getElementById('activeTime').textContent =
+    seconds < 60 ? seconds + 's' : Math.floor(seconds/60) + 'm';
+}, 1000);
+
+function copyToClipboard(id) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied to clipboard!', 'success');
+  });
+}
+
+function downloadText(id, filename) {
+  const text = document.getElementById(id).innerText;
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+  a.download = filename;
+  a.click();
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast-msg alert alert-${type} position-fixed bottom-0 end-0 m-3`;
+  t.style.zIndex = 9999;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+async function generateQR() {
+  const upiId = document.getElementById('upiId').value.trim();
+  const amount = document.getElementById('upiAmount').value.trim();
+  if (!upiId) { showToast('Please enter a UPI ID.', 'warning'); return; }
+  const out = document.getElementById('qrOutput');
+  out.innerHTML = '<div class="spinner-border spinner-border-sm text-primary"></div>';
+  const res = await fetch('/api/generate-qr', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({upi_id: upiId, vendor_name: vendorData.business, amount})
+  });
+  const data = await res.json();
+  if (data.qr_image) {
+    out.innerHTML = `
+      <img src="${data.qr_image}" class="img-fluid mt-2" style="max-width:180px" alt="UPI QR"/>
+      <p class="small text-muted mt-1">Scan to pay ${vendorData.business}</p>
+      <a href="${data.qr_image}" download="upi_qr.png" class="btn btn-sm btn-success mt-1">
+        <i class="bi bi-download me-1"></i>Download QR
+      </a>`;
+  } else {
+    out.innerHTML = `<p class="text-danger small">${data.error}</p>`;
+  }
+}
+
+const toolModal = new bootstrap.Modal(document.getElementById('toolModal'));
+const toolConfigs = {
+  upi:           {title:'UPI Setup Guide',           url:'/api/upi-guide',           body:{vendor_name: vendorData.name, language: vendorData.language}},
+  govtSchemes:   {title:'Government Schemes',        url:'/api/govt-schemes',        body:{category: vendorData.category, language: vendorData.language}},
+  seo:           {title:'Local SEO Tips',            url:'/api/seo-tips',            body:{category: vendorData.category, location: vendorData.city, language: vendorData.language}},
+  festival:      {title:'Festival Promotions',       url:'/api/festival-promo',      body:{festival:'Diwali', category: vendorData.category, language: vendorData.language}},
+  whatsapp:      {title:'WhatsApp Messages',         url:'/api/whatsapp-messages',   body:{business_name: vendorData.business, category: vendorData.category, occasion:'general promotion', language: vendorData.language}},
+  pricing:       {title:'Pricing Recommendations',  url:'/api/pricing',             body:{category: vendorData.category, items:'', location: vendorData.city, language: vendorData.language}},
+  customer:      {title:'Customer Engagement Tips',  url:'/api/customer-tips',       body:{category: vendorData.category, language: vendorData.language}},
+  googleBusiness:{title:'Google Business Guide',     url:'/api/google-business-guide',body:{vendor_name: vendorData.business, category: vendorData.category, language: vendorData.language}},
+};
+
+async function openTool(key) {
+  const cfg = toolConfigs[key];
+  document.getElementById('toolModalTitle').textContent = cfg.title;
+  document.getElementById('toolModalBody').innerHTML =
+    '<div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">IBM Granite is generating...</p></div>';
+  toolModal.show();
+  const res = await fetch(cfg.url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(cfg.body)
+  });
+  const data = await res.json();
+  const body = document.getElementById('toolModalBody');
+  if (data.result) {
+    body.innerHTML = data.result.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  } else {
+    body.innerHTML = `<p class="text-danger">${data.error || 'Error generating content.'}</p>`;
+  }
+}
+
+// ── Profile Switch ────────────────────────────────────────────────────────────
+document.querySelectorAll('.profile-switch-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id   = btn.dataset.id;
+    const name = btn.dataset.name;
+    const res  = await fetch('/api/switch-profile', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({profile_id: id})
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      showToast(`✅ Switched to: ${name}`, 'success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      showToast(data.error || 'Switch failed.', 'danger');
+    }
+  });
+});
+
+// ── Profile Delete ────────────────────────────────────────────────────────────
+document.querySelectorAll('.profile-delete-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id = btn.dataset.id;
+    if (!confirm('Delete this profile? This cannot be undone.')) return;
+    const res  = await fetch('/api/delete-profile', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({profile_id: id})
+    });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      showToast(`🗑️ Profile deleted. ${data.remaining} profile(s) remaining.`, 'warning');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      showToast(data.error || 'Delete failed.', 'danger');
+    }
+  });
+});
+</script>
+{% endblock %}
