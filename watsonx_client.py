@@ -60,8 +60,8 @@ Language rules:
 
 def get_credentials() -> Credentials:
     """Build IBM Cloud credentials from environment variables."""
-    api_key = os.getenv("WATSONX_API_KEY")
-    url = os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com")
+    api_key = os.getenv("gwmqRIEP-mo2z8h4z_HpgNKmBvOxKJqBEFAmAsK1mU0B")
+    url = os.getenv("WATSONX_URL", "https://au-syd.ml.cloud.ibm.com")
     if not api_key:
         raise ValueError("WATSONX_API_KEY is not set in the environment.")
     return Credentials(url=url, api_key=api_key)
@@ -69,7 +69,7 @@ def get_credentials() -> Credentials:
 
 def get_model() -> ModelInference:
     """Instantiate the IBM model for inference."""
-    project_id = os.getenv("WATSONX_PROJECT_ID")
+    project_id = os.getenv("7d09c5ff-a886-45c0-bc7c-0e4be9dbcb80")
     model_id = os.getenv("GRANITE_MODEL_ID", "meta-llama/llama-3-3-70b-instruct")
     if not project_id:
         raise ValueError("WATSONX_PROJECT_ID is not set in the environment.")
