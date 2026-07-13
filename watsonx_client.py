@@ -150,9 +150,11 @@ def generate_response(user_message: str, context: str = "",
         return response.strip() if response else "I'm sorry, I couldn't generate a response. Please try again."
     except Exception as exc:
         logger.error("Granite generation error: %s", exc, exc_info=True)
+        # Surface the real error message to help with debugging
+        error_detail = str(exc)
         return (
-            "⚠️ I encountered an error connecting to IBM watsonx.ai. "
-            "Please check your API credentials and try again."
+            f"⚠️ I encountered an error connecting to IBM watsonx.ai. "
+            f"Error: {error_detail}"
         )
 
 
